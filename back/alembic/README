@@ -1,0 +1,9 @@
+uv add alembic
+
+确保env.py 引入了要迁移的模型
+确保  alembic.ini 中的数据库链接和项目的一样
+切换到back目录
+保证有 back/alembic/versions 目录
+
+uv run alembic revision --autogenerate -m "alter"     生成迁移文件
+uv run alembic upgrade head                                    执行迁移

@@ -1,0 +1,149 @@
+{
+    "icons": "https://icon-sets.iconify.design/",
+    "menus": [
+        {
+            "id": 1,
+            "parent_id": null,
+            "label": "首页",
+            "icon": "fluent:home-48-filled",
+            "component": "admin/index.vue",
+            "name": "index",
+            "path": "index",
+            "sort": 1,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 2,
+            "parent_id": null,
+            "label": "系统管理",
+            "icon": "mdi:gear",
+            "component": "",
+            "name": "system",
+            "path": "system",
+            "sort": 100,
+            "is_link": false,
+            "is_catalog": true
+        },
+        {
+            "id": 3,
+            "parent_id": 2,
+            "label": "用户管理",
+            "icon": "tdesign:user",
+            "component": "admin/system/user.vue",
+            "name": "user",
+            "path": "user",
+            "sort": 2,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 4,
+            "parent_id": 2,
+            "label": "角色管理",
+            "icon": "eos-icons:role-binding",
+            "component": "admin/system/role.vue",
+            "name": "role",
+            "path": "role",
+            "sort": 2,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 5,
+            "parent_id": 2,
+            "label": "接口管理",
+            "icon": "nonicons:interface-16",
+            "component": "admin/system/interface.vue",
+            "name": "interface",
+            "path": "interface",
+            "sort": 54,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 6,
+            "parent_id": 2,
+            "label": "部门管理",
+            "icon": "mingcute:department-fill",
+            "component": "admin/system/dept.vue",
+            "name": "dept",
+            "path": "dept",
+            "sort": 3,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 7,
+            "parent_id": 2,
+            "label": "菜单管理",
+            "icon": "ep:menu",
+            "component": "admin/system/menu.vue",
+            "name": "menu",
+            "path": "menu",
+            "sort": 1,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 8,
+            "parent_id": 2,
+            "label": "登陆日志",
+            "icon": "mdi:math-log",
+            "component": "admin/system/loginlog.vue",
+            "name": "loginlog",
+            "path": "loginlog",
+            "sort": 10,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 9,
+            "parent_id": 2,
+            "label": "文件管理",
+            "icon": "mdi:file",
+            "component": "admin/system/file.vue",
+            "name": "file",
+            "path": "file",
+            "sort": 10,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 10,
+            "parent_id": 2,
+            "label": "模型管理",
+            "icon": "mdi:robot",
+            "component": "admin/system/model.vue",
+            "name": "model",
+            "path": "model",
+            "sort": 11,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 11,
+            "parent_id": 2,
+            "label": "对话管理",
+            "icon": "mdi:chat",
+            "component": "admin/system/chat.vue",
+            "name": "chat",
+            "path": "chat",
+            "sort": 12,
+            "is_link": false,
+            "is_catalog": false
+        },
+        {
+            "id": 12,
+            "parent_id": 2,
+            "label": "按钮管理",
+            "icon": "mdi:button-cursor",
+            "component": "admin/system/button.vue",
+            "name": "button",
+            "path": "button",
+            "sort": 55,
+            "is_link": false,
+            "is_catalog": false
+        }
+    ]
+}

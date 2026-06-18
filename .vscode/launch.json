@@ -1,0 +1,68 @@
+{
+  // 使用 IntelliSense 了解相关属性。 
+  // 悬停以查看现有属性的描述。
+  // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // 运行命令行命令. 没有python环境
+      "command": "uv run main.py",
+      "name": "run",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/back",
+      "trace": false
+    },
+    {
+      // 运行命令行命令. 没有python环境
+      "command": "uv run init.py",
+      "name": "init",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/back",
+      "trace": false
+    },
+    {
+      // 运行命令行命令. 没有python环境
+      "command": "uv sync",
+      "name": "sync",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/back"
+    },
+    {
+      // 运行命令行命令. 没有python环境
+      "command": "uv run run.py",
+      "name": "indextts",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "C:/project/index-tts/"
+    },
+    {
+      // 运行命令行命令. 没有python环境
+      "command": "pnpm run dev",
+      "name": "dev",
+      "request": "launch",
+      "type": "node-terminal",
+      "autoAttachChildProcesses": false,
+      "trace": false,
+      "cwd": "${workspaceFolder}/web"
+    },
+    {
+      // 运行命令行命令. 没有python环境
+      "command": "pnpm run dev",
+      "name": "electron-dev",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/web_app"
+    },
+    {
+      // 运行命令行命令. 没有python环境
+      "command": "pnpm run build",
+      "name": "build",
+      "request": "launch",
+      "type": "node-terminal",
+      "cwd": "${workspaceFolder}/web"
+    },
+  ]
+}

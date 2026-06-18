@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>账号激活</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #6e8efb, #a777e3);
+        color: #333;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 600px;
+        background-color: #ffffff;
+        border-radius: 10px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        text-align: center;
+      }
+      .header {
+        font-size: 28px;
+        color: #4CAF50;
+        margin-bottom: 10px;
+      }
+      .subheader {
+        font-size: 18px;
+        color: #666;
+        margin-bottom: 30px;
+      }
+      .content {
+        font-size: 16px;
+        line-height: 1.6;
+        color: #555;
+      }
+      .button {
+        display: inline-block;
+        margin-top: 20px;
+        padding: 12px 24px;
+        color: #ffffff;
+        background-color: #6e8efb;
+        border-radius: 5px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: background 0.3s ease;
+      }
+      .button:hover {
+        background-color: #5a73e0;
+      }
+      .footer {
+        font-size: 14px;
+        color: #999;
+        margin-top: 30px;
+      }
+      
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">🎉 账号激活</div>
+      <div class="subheader">欢迎您成功注册我们的服务！</div>
+      <div class="content">
+        <p>您好，{{ user_name }}，</p>
+        <p>您的账号已成功注册。请点击以下按钮激活您的账号，以开始使用我们的服务：</p>
+        <a href="{{ activate_link }}" class="button">激活账号</a>
+        <p>此激活链接将在{{ expiration_time }}内有效。</p>
+      </div>
+      <div class="footer">
+        如果您没有注册此账号，请忽略此邮件。<br>
+        谢谢！<br>BLOGER
+      </div>
+    </div>
+  </body>
+</html>

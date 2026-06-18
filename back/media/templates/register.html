@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注册页面</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #4e54c8, #8f94fb);
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.644);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .header {
+            font-size: 32px;
+            color: #000000;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #000000;
+        }
+        .input-group input {
+            width: calc(100% - 20px); /* 减去左右内边距 */
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            margin: 0 auto; /* 居中 */
+        }
+        .button {
+            width: 100%;
+            padding: 10px;
+            color: #ffffff;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s ease;
+            font-size: 16px;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #000000;
+        }
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+    <script>
+        function validatePasswords() {
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const errorMessage = document.getElementById('error-message');
+            
+            if (password !== confirmPassword) {
+                errorMessage.textContent = "密码不一致，请重新输入！";
+                return false;
+            } else {
+                errorMessage.textContent = ""; // 清除错误信息
+            }
+            return true;
+        }
+        
+        // 提交表单时去掉确认密码
+        function submitForm(event) {
+            if (!validatePasswords()) {
+                event.preventDefault(); // 阻止表单提交
+                return;
+            }
+            // 获取确认密码字段并移除
+            const confirmPasswordInput = document.getElementById('confirm_password');
+            confirmPasswordInput.name = ''; // 移除 name 属性
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">创建账号</div>
+        <form action="/api/login/signup" method="POST" onsubmit="submitForm(event);">
+            <div class="input-group">
+                <label for="email">邮箱：</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="input-group">
+                <label for="fullname">用户名：</label>
+                <input type="text" id="fullname" name="fullname" required>
+            </div>
+            <div class="input-group">
+                <label for="password">密码：</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <div class="input-group">
+                <label for="confirm_password">确认密码：</label>
+                <input type="password" id="confirm_password" name="confirm_password" required>
+            </div>
+            <div id="error-message" class="error-message"></div>
+            <button type="submit" class="button">注册</button>
+        </form>
+        <div class="footer">
+            <p>已有账号？<a href="/api/login">点击登录</a></p>
+        </div>
+    </div>
+</body>
+</html>

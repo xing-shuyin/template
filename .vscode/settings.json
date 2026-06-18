@@ -1,0 +1,16 @@
+{
+    "idf.pythonInstallPath": "/usr/bin/python",
+    "files.watcherExclude": {
+        "**/dist/**": true
+    },
+    "search.exclude": {
+        "**/dist/**": true
+    },
+    "files.exclude": {
+        "**/dist/**": true,
+        "**/build/**": true,
+        "**/__pycache__/**": true,
+        "**/.venv/**": false,
+        "**/node_modules/**": true
+    }
+}

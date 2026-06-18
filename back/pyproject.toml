@@ -1,0 +1,34 @@
+[project]
+name = "template"
+version = "0.1.0"
+description = "Management System"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic",
+    "asyncpg",
+    "bcrypt>=4.0.0",
+    "email-validator>=2.3.0",
+    "fastapi",
+    "Jinja2",
+    "loguru",
+    "Pillow",
+    "asyncpg",
+    "psycopg2-binary",
+    "pydantic",
+    "pydantic_settings",
+    "PyJWT",
+    "redis",
+    "requests",
+    "sqlalchemy[asyncio]",
+    "sqlmodel",
+    "uvicorn[standard]",
+    "python-multipart>=0.0.29",
+    "httpx>=0.28.1",
+]
+
+
+
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+default = true

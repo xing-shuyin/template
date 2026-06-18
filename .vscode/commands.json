@@ -1,0 +1,25 @@
+{
+  "commands": [
+    {
+      "id": "1",
+      "name": "run",
+      "command": "uv run main.py",
+      "workingDirectory": "${pwd}/back",
+      "description": "uv run"
+    },
+    {
+      "id": "1779103430083",
+      "name": "claude bypass",
+      "command": "claude --permission-mode bypassPermissions",
+      "workingDirectory": "${pwd}",
+      "description": ""
+    },
+    {
+      "id": "2",
+      "name": "dev",
+      "command": "pnpm run dev",
+      "workingDirectory": "${pwd}/web",
+      "description": "pnpm run dev"
+    }
+  ]
+}
