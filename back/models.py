@@ -16,6 +16,7 @@ from sqlalchemy.sql import func
 from settings import settings
 import os
 from pydantic import field_serializer
+from loguru import logger
 
 # 不要引入utils的模块，否则会导致循环导入
 
@@ -66,7 +67,7 @@ class File(BaseModel, table=True):
 @event.listens_for(File, "before_delete")
 def before_delete(mapper, connection, target):
     file_path = Path(os.path.join(settings.MEDIA_PATH, target.url))
-    print("删除文件", target.url)
+    logger.info(f"删除文件: {target.url}")
     if file_path.exists():
         file_path.unlink()  # 删除文件
 
@@ -303,6 +304,8 @@ class Chat(BaseModel, table=True):
     name: str = ""
     messages: list[dict] = Field(default_factory=list, sa_column=Column(JSON))
     role_id: int | None = Field(default=None)
+    tokens_used: int = 0
+    last_message_at: datetime.datetime | None = Field(default=None, sa_type=DateTime)
 
 
 class Model(BaseModel, table=True):

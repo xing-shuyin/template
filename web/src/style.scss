@@ -7,46 +7,6 @@
 
   --detail-bg: #ffffff !important;
 
-  /* 聊天容器区域 - 使用更明显的区分 */
-  --chat-container-bg: #f9fafb;
-  --chat-container-color: #333333;
-
-  /* 消息区域 - 增强区分度 */
-  --chat-message-color: #2d3748;
-  --chat-message-time-color: #64748b;
-  --chat-message-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --chat-message-scroll-color: rgba(45, 55, 72, 0.2);
-  --chat-message-scroll-hover-color: rgba(45, 55, 72, 0.3);
-  --chat-message-user-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --chat-message-ai-bg: #ffffff;
-
-  /* 思考消息 - 更明显的紫色 */
-  --chat-message-think-bg: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  --chat-message-think-color: white;
-  --chat-message-think-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-
-  /* 代码块 - 更浅的背景 */
-  --chat-message-code-bg: #f0f4f8;
-  --chat-message-code-color: #2d3748;
-  --chat-message-a-color: #3b82f6;
-  --chat-message-th-bg: #e1e8f0;
-  --chat-message-tr-bg: #ffffff;
-  --chat-message-scrollbar-bg: rgba(45, 55, 72, 0.2);
-  --chat-message-th-color: #2d3748;
-  --chat-message-header-color: #1a202c;
-  --chat-message-td-border: 1px solid #d0dae5;
-  --chat-message-blockquote-color: #64748b;
-  --chat-message-blockquote-border-left: 4px solid #3b82f6;
-  --chat-message-code-header-bg: #d6e0eb;
-  --chat-message-code-header-color: #4a5568;
-  --chat-message-code-header-language-label-color: #64748b;
-  --chat-message-code-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --chat-message-code-copy-hover-bg: rgba(45, 55, 72, 0.1);
-  --chat-message-code-copy-hover-color: #2d3748;
-
-  /* 发送按钮 - 更亮的蓝色 */
-  --chat-send-btn-bg: #3b82f6;
-  --chat-send-btn-color: white;
 }
 
 .theme-switch {
@@ -62,42 +22,6 @@
   --scrollbar-bg: #97949475;
   --detail-bg: #1a1a1a !important;
 
-  --chat-container-bg: #1a1a1a;
-  --chat-container-color: #ffffff;
-
-  --chat-message-color: #e0e0e0;
-  --chat-message-time-color: #888;
-  --chat-message-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  --chat-message-scroll-color: rgba(255, 255, 255, 0.2);
-  --chat-message-scroll-hover-color: rgba(255, 255, 255, 0.3);
-  --chat-message-user-bg: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
-  --chat-message-ai-bg: #1e1e1e;
-
-  --chat-message-think-bg: linear-gradient(135deg, #7e22ce 0%, #6b21a8 100%);
-  --chat-message-think-color: white;
-  --chat-message-think-box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3)white;
-
-  --chat-message-code-bg: #141414;
-  --chat-message-code-color: #e5e7eb;
-  --chat-message-a-color: #3b82f6;
-  --chat-message-th-bg: #1e1e1e;
-  --chat-message-tr-bg: #141414;
-  --chat-message-scrollbar-bg: rgba(255, 255, 255, 0.2);
-  --chat-message-th-color: #e5e7eb;
-  --chat-message-header-color: #f3f4f6;
-  --chat-message-td-border: 1px solid #2a2a2a;
-  --chat-message-blockquote-color: #a1a1aa;
-  --chat-message-blockquote-border-left: 4px solid #3b82f6;
-  --chat-message-code-header-bg: #1e1e1e;
-  --chat-message-code-header-color: #a1a1aa;
-  --chat-message-code-header-language-label-color: #d1d5db;
-  --chat-message-code-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  --chat-message-code-copy-hover-bg: rgba(255, 255, 255, 0.1);
-  --chat-message-code-copy-hover-color: white;
-
-  --chat-send-btn-bg: #1e1e1e;
-  --chat-send-btn-color: #ffffff;
-
 }
 
 * {
@@ -107,7 +31,7 @@
   font-feature-settings: normal;
   -webkit-tap-highlight-color: transparent;
   font-variation-settings: normal;
-  line-height: 1.5;
+  // line-height: 1.5;
   tab-size: 4;
   box-sizing: border-box;
 }

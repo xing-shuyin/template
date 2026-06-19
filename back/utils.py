@@ -19,7 +19,7 @@ import hashlib
 import os
 from io import BytesIO
 from pathlib import Path
-from src.deps import DB, Client
+from src.deps import DB, Client, ASYNC_DB
 from db import redisclient
 from models import File
 from src.deps import CurrentUser
@@ -27,7 +27,7 @@ from loguru import logger
 import base64
 
 
-async def upload_file(db: DB, file: UploadFile, user: CurrentUser):
+async def upload_file(db: ASYNC_DB, file: UploadFile, user: CurrentUser) -> dict:
     now = datetime.datetime.now()
     year = str(now.year)
     month = str(now.month)
@@ -43,7 +43,7 @@ async def upload_file(db: DB, file: UploadFile, user: CurrentUser):
         buffer.write(file.file.read())
     f = File(name=file.filename, url=url, size=file.file.tell(), type=file.content_type)
     db.add(f)
-    db.commit()
+    await db.commit()
     return {
         "name": file.filename,
         "url": url,
@@ -54,7 +54,7 @@ async def upload_file(db: DB, file: UploadFile, user: CurrentUser):
 
 
 async def upload_files(
-    db: DB,
+    db: ASYNC_DB,
     files: list[UploadFile],
     user: CurrentUser,
 ):
@@ -79,7 +79,7 @@ async def upload_files(
             type=file.content_type,
         )
         db.add(f)
-        db.commit()
+        await db.commit()
         file_list.append(
             {
                 "name": file.filename,
@@ -93,8 +93,8 @@ async def upload_files(
     return file_list
 
 
-async def download_file(db: DB, file_id: int):
-    file = db.exec(select(File).where(File.id == file_id)).first()
+async def download_file(db: ASYNC_DB, file_id: int) -> FileResponse:
+    file = (await db.exec(select(File).where(File.id == file_id))).first()
     if not file:
         raise HTTPException(status_code=404, detail="file not found")
     file_path = os.path.join(settings.MEDIA_PATH, file.url)
@@ -108,7 +108,7 @@ env = Environment(
 )
 
 
-def send_email(to_email, content, subject=""):
+def send_email(to_email: str, content: str, subject: str = "") -> bool:
     msg = EmailMessage()
     msg["Subject"] = subject
     msg["From"] = settings.EMAILS_FROM_EMAIL
@@ -132,7 +132,7 @@ def send_email(to_email, content, subject=""):
             return True
 
 
-def send_activate_email(to_email, user_name, activate_link, expiration_time):
+def send_activate_email(to_email: str, user_name: str, activate_link: str, expiration_time: str) -> bool:
     template = env.get_template("activate_email.html")
     content = template.render(
         user_name=user_name,
@@ -142,7 +142,7 @@ def send_activate_email(to_email, user_name, activate_link, expiration_time):
     return send_email(to_email, content, "账号激活")
 
 
-def send_code_email(to_email, user_name, verification_code, expiration_time):
+def send_code_email(to_email: str, user_name: str, verification_code: str, expiration_time: str) -> None:
     template = env.get_template("code_email.html")
     content = template.render(
         user_name=user_name,
@@ -152,7 +152,7 @@ def send_code_email(to_email, user_name, verification_code, expiration_time):
     send_email(to_email, content, "验证码")
 
 
-def send_reset_email(to_email, user_name, reset_link, expiration_time):
+def send_reset_email(to_email: str, user_name: str, reset_link: str, expiration_time: str) -> bool:
     template = env.get_template("reset_email.html")
     content = template.render(
         user_name=user_name, reset_link=reset_link, expiration_time=expiration_time
@@ -167,11 +167,11 @@ class CaptchaConfig(SQLModel):
     char_length: int = 4
 
 
-def generate_captcha_text(length: int = 4):
+def generate_captcha_text(length: int = 4) -> str:
     return "".join(random.choices(string.ascii_uppercase + string.digits, k=length))
 
 
-def generate_captcha_image(text: str, config: CaptchaConfig):
+def generate_captcha_image(text: str, config: CaptchaConfig) -> Image.Image:
     image = Image.new("RGB", (config.width, config.height), (255, 255, 255))
     draw = ImageDraw.Draw(image)
 
@@ -224,7 +224,7 @@ async def get_captcha(
     return response
 
 
-async def image(file: str):
+async def image(file: str) -> FileResponse:
     if "http" not in file:
         img_path = os.path.join(settings.MEDIA_PATH, file)
         return FileResponse(img_path)
@@ -243,7 +243,7 @@ async def image(file: str):
         raise HTTPException(status_code=500, detail="缓存失败")
 
 
-async def video(file: str, range: str = Header(None)):
+async def video(file: str, range: str = Header(None)) -> StreamingResponse:
     try:
         video_path = Path(os.path.join(settings.MEDIA_PATH, file))
         if not video_path.exists():
@@ -286,7 +286,7 @@ async def video(file: str, range: str = Header(None)):
         logger.error(f"Error in video endpoint: {e}")
 
 
-async def iconify_collections():
+async def iconify_collections() -> JSONResponse:
     os.makedirs(os.path.join(settings.MEDIA_PATH, "iconify"), exist_ok=True)
     cache_file = os.path.join(settings.MEDIA_PATH, "iconify", "iconify_collections.json")
     if os.path.exists(cache_file):
@@ -314,7 +314,7 @@ async def iconify_collections():
         return JSONResponse({"error": str(e)}, status_code=500)
 
 
-async def iconify_icons(prefix: str):
+async def iconify_icons(prefix: str) -> JSONResponse:
     cache_file = os.path.join(settings.MEDIA_PATH, "iconify", f"iconify_icons_{prefix}.json")
     if os.path.exists(cache_file):
         with open(cache_file, "r", encoding="utf-8") as f:

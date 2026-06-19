@@ -44,6 +44,10 @@ async def signup(
     """
     注册用户
     """
+    # 限流：按 IP 限制注册频率
+    client_ip = request.client.host if request.client else "unknown"
+    await check_rate_limit(f"signup:ip:{client_ip}", max_attempts=3, window=60)
+
     user = await get_user(db, user_in.email)
     if user:
         if user.is_active:
@@ -88,20 +92,24 @@ async def reset_password(request: Request):
 
 @router.post("/reset", name="重置密码邮件发送")
 async def reset_password(db: ASYNC_DB, request: Request, user: UserResetEmail):
-    user = await get_user(db, email=user.email)
-    if not user:
+    # 限流：按 IP 限制密码重置频率
+    client_ip = request.client.host if request.client else "unknown"
+    await check_rate_limit(f"reset:ip:{client_ip}", max_attempts=3, window=60)
+    
+    user_obj = await get_user(db, email=user.email)
+    if not user_obj:
         raise HTTPException(status_code=400, detail="邮箱不存在")
-    elif not user.is_active:
+    elif not user_obj.is_active:
         raise HTTPException(status_code=400, detail="邮箱未激活")
     else:
         reset_token = create_token(
-            user.id,
+            user_obj.id,
             datetime.timedelta(minutes=settings.RESET_TOKEN_EXPIRE_MINUTES),
             TokenType.reset_token.value,
         )
         send_reset_email(
-            user.email,
-            user.fullname,
+            user_obj.email,
+            user_obj.fullname,
             f"http://localhost:8000/api/login/reset_input?token={reset_token}",
             f"{settings.RESET_TOKEN_EXPIRE_MINUTES}分钟",
         )
@@ -130,8 +138,8 @@ async def reset_password(
     user = await get_user(db, user_reset.email)
     user.hash_password = hash_password(user_in.password)
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return templates.TemplateResponse("reset_success.html", {"request": request})
 
 
@@ -142,12 +150,12 @@ async def change_password(request: Request, current_user: CurrentUser):
 
 @router.post("/change_password", name="修改密码")
 async def change_password(
-    db: DB, current_user: CurrentUser, user_in: UserChangePassword
+    db: ASYNC_DB, current_user: CurrentUser, user_in: UserChangePassword
 ):
     current_user.hash_password = hash_password(user_in.new_password)
     db.add(current_user)
-    db.commit()
-    db.refresh(current_user)
+    await db.commit()
+    await db.refresh(current_user)
     return {"success": True}
 
 
@@ -157,11 +165,11 @@ async def reset_success(request: Request):
 
 
 @router.get("/activate", name="activate")
-async def activate(request: Request, user: ActivateUser, db: DB):
+async def activate(request: Request, user: ActivateUser, db: ASYNC_DB):
     user.is_active = True
     db.add(user)
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return templates.TemplateResponse("activate_success.html", {"request": request})
 
 
@@ -282,16 +290,15 @@ async def access_token(
         user_agent=request.headers.get("User-Agent"),
     )
     db.add(lg)
-    db.commit()
+    await db.commit()
     # 返回 Token 数据
-    # print(access_token)
     return {"access_token": access_token, "refresh_token": refresh_token}
 
 
 @router.get("/refresh/", name="刷新登陆")
-async def refresh_token(db: DB, response: Response, user: RefreshUser):
+async def refresh_token(db: ASYNC_DB, response: Response, user: RefreshUser):
     # 生成 Refresh Token
-    refresh_token = create_token(
+    new_refresh_token = create_token(
         user.id,
         datetime.timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
         TokenType.refresh_token.value,
@@ -300,15 +307,15 @@ async def refresh_token(db: DB, response: Response, user: RefreshUser):
     # 设置 Cookie
     response.set_cookie(
         key="refresh_token",
-        value=refresh_token,
+        value=new_refresh_token,
         httponly=True,
-        secure=True,
-        expires=datetime.datetime.now(datetime.timezone.utc)
-        + datetime.timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+        secure=settings.IS_PRODUCTION,
+        samesite="lax",
+        max_age=datetime.timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
     )
 
     # 返回 Token 数据
-    return {"refresh_token": refresh_token}
+    return {"refresh_token": new_refresh_token}
 
 
 @router.get("/logout/", name="退出登陆")

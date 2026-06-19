@@ -9,15 +9,18 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ai-sdk/vue": "^3.0.207",
     "@element-plus/icons-vue": "^2.3.1",
     "@iconify/vue": "^5.0.0",
     "@vueuse/core": "^13.4.0",
+    "ai": "^6.0.207",
     "axios": "^1.10.0",
     "echarts": "^5.6.0",
     "element-plus": "^2.10.2",
     "highlight.js": "^11.11.1",
     "jsoneditor": "^10.2.0",
     "markdown-it": "^14.2.0",
+    "marked": "^18.0.5",
     "mitt": "^3.0.1",
     "moment": "^2.30.1",
     "pinia": "^3.0.3",

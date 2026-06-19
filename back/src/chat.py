@@ -1,23 +1,28 @@
 """
-AI 对话 WebSocket 处理器
+AI 对话处理器 — 基于 LangChain
 
-协议:
-  Client → Server: {"action": "send",   "messages": [...], "model_id": 1, "chat_id": 123}
+协议 (WebSocket):
+  Client → Server: {"action": "send", "messages": [...], "model_id": 1, "chat_id": 123}
   Client → Server: {"action": "stop"}
-  Server → Client: {"type": "delta",    "content": "..."}            — 增量内容
-  Server → Client: {"type": "reason",   "content": "..."}            — 思考过程
-  Server → Client: {"type": "tool_calls", "data": [...]}             — 工具调用
-  Server → Client: {"type": "end"}                                    — 结束
-  Server → Client: {"type": "error",    "message": "..."}            — 错误
+  Server → Client: {"type": "delta", "content": "..."}
+  Server → Client: {"type": "reason", "content": "..."}
+  Server → Client: {"type": "tool_calls", "data": [...]}
+  Server → Client: {"type": "end"}
+  Server → Client: {"type": "error", "message": "..."}
+
+协议 (SSE /proxy):
+  OpenAI 兼容 SSE 流，供 @ai-sdk/vue useChat 使用。
 """
 
 from sqlmodel import select, delete
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
-from src.deps import ASYNC_DB, CurrentUserId, current_user_id
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from src.deps import ASYNC_DB, CurrentUserId, CurrentUser, current_user_id
 from models import Chat, Model
 import json
 import asyncio
 import uuid
+from datetime import datetime
 from loguru import logger
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -25,16 +30,48 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 # 存储运行中的生成任务, key=uuid, value=asyncio.Event 用于停止信号
 _tasks: dict[str, asyncio.Event] = {}
 
+# 支持的工具定义（后续可扩展）
+AVAILABLE_TOOLS = []
 
-# ─── AI 流式调用 ─────────────────────────────────────────────
+
+# ─── LangChain 模型工厂 ─────────────────────────────────────
+
+def _build_llm(model_config: Model):
+    """根据 Model 数据库记录构建 LangChain LLM 实例。"""
+    provider = (model_config.type or "openai").lower()
+    kwargs = {
+        "model": model_config.name,
+        "temperature": 0.7,
+        "streaming": True,
+        "timeout": 120,
+    }
+
+    if provider == "anthropic":
+        from langchain_anthropic import ChatAnthropic
+        if model_config.api_key:
+            kwargs["anthropic_api_key"] = model_config.api_key
+        if model_config.base_url:
+            kwargs["anthropic_api_url"] = model_config.base_url
+        return ChatAnthropic(**kwargs)
+    else:
+        # 默认: OpenAI 兼容 (也支持 DeepSeek / Ollama / vLLM 等)
+        from langchain_openai import ChatOpenAI
+        if model_config.api_key:
+            kwargs["openai_api_key"] = model_config.api_key
+        if model_config.base_url:
+            kwargs["openai_api_base"] = model_config.base_url.rstrip("/")
+        return ChatOpenAI(**kwargs)
+
+
+# ─── AI 流式调用 (LangChain) ────────────────────────────────
 
 async def stream_ai(
     messages: list[dict],
     model_config: Model | None,
+    enable_tools: bool = False,
 ):
-    """调用 AI API 并逐块 yield 响应数据。"""
+    """使用 LangChain 调用 AI 并逐块 yield 响应数据。"""
     if model_config is None:
-        # 模拟响应 (无可用模型时演示用)
         yield {"type": "reason", "content": "思考中..."}
         await asyncio.sleep(0.5)
         yield {"type": "delta", "content": "你好！我是 AI 助手。"}
@@ -44,59 +81,33 @@ async def stream_ai(
         yield {"type": "delta", "content": "\n\n请先在后台添加一个 Model 记录来启用真实 AI。"}
         return
 
-    # ── 真实 OpenAI 兼容 API 调用 ──
-    import httpx
-    base_url = (model_config.base_url or "https://api.openai.com/v1").rstrip("/")
-    api_key = model_config.api_key or "sk-placeholder"
+    llm = _build_llm(model_config)
 
-    async with httpx.AsyncClient(timeout=120) as client:
-        try:
-            async with client.stream(
-                "POST",
-                f"{base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model": model_config.name,
-                    "messages": messages,
-                    "stream": True,
-                },
-            ) as resp:
-                resp.raise_for_status()
-                buffer = ""
-                async for chunk in resp.aiter_bytes():
-                    buffer += chunk.decode()
-                    while "\n" in buffer:
-                        line, buffer = buffer.split("\n", 1)
-                        line = line.strip()
-                        if not line or line.startswith(":"):
-                            continue
-                        if line.startswith("data: "):
-                            data_str = line[6:]
-                            if data_str == "[DONE]":
-                                return
-                            try:
-                                data = json.loads(data_str)
-                            except json.JSONDecodeError:
-                                continue
-                            for choice in data.get("choices", []):
-                                delta = choice.get("delta", {})
-                                finish = choice.get("finish_reason")
-                                if delta.get("content"):
-                                    yield {"type": "delta", "content": delta["content"]}
-                                if delta.get("reasoning_content"):
-                                    yield {"type": "reason", "content": delta["reasoning_content"]}
-                                if delta.get("tool_calls"):
-                                    yield {"type": "tool_calls", "data": delta["tool_calls"]}
-                                if finish == "tool_calls":
-                                    yield {"type": "tool_calls_end"}
-        except httpx.HTTPStatusError as e:
-            body = await e.response.aread()
-            yield {"type": "error", "message": f"API {e.response.status_code}: {body.decode(errors='replace')[:500]}"}
-        except Exception as e:
-            yield {"type": "error", "message": str(e)}
+    # 绑定工具
+    if enable_tools and AVAILABLE_TOOLS:
+        llm = llm.bind_tools(AVAILABLE_TOOLS)
+
+    try:
+        async for chunk in llm.astream(messages):
+            # ⬇ 处理 reasoning_content (OpenAI o1/o3 专属)
+            if hasattr(chunk, "additional_kwargs"):
+                reason = chunk.additional_kwargs.get("reasoning_content")
+                if reason:
+                    yield {"type": "reason", "content": reason}
+
+            # ⬇ 处理普通文本增量
+            if chunk.content:
+                yield {"type": "delta", "content": chunk.content}
+
+            # ⬇ 处理工具调用
+            if chunk.tool_call_chunks:
+                for tc in chunk.tool_call_chunks:
+                    yield {"type": "tool_calls", "data": tc}
+                yield {"type": "tool_calls_end"}
+
+    except Exception as e:
+        logger.error(f"[LangChain] 调用失败: {e}")
+        yield {"type": "error", "message": str(e)}
 
 
 # ─── WebSocket 端点 ──────────────────────────────────────────
@@ -164,12 +175,6 @@ async def chat_ws(websocket: WebSocket, db: ASYNC_DB):
 
                 async def _generate():
                     try:
-                        last_user_msg = next((m for m in reversed(ai_messages) if m.get("role") == "user"), None)
-                        content_preview = ""
-                        if last_user_msg:
-                            c = last_user_msg.get("content", "")
-                            content_preview = c[:15] if isinstance(c, str) else str(c)[:15]
-
                         assistant_content = ""
                         async for chunk in stream_ai(ai_messages, model_obj):
                             if stop_event.is_set():
@@ -210,39 +215,136 @@ async def chat_ws(websocket: WebSocket, db: ASYNC_DB):
         _tasks.pop(task_id, None)
 
 
+# ─── SSE 代理端点 (供 @ai-sdk/vue useChat 调用) ─────────────
+
+@router.post("/proxy")
+async def chat_proxy(
+    request: Request,
+    db: ASYNC_DB,
+    current_user: CurrentUser,
+):
+    """
+    OpenAI 兼容的 SSE 流式代理端点。
+    与 @ai-sdk/vue useChat 直接对接，自动保存对话到数据库。
+    """
+    body = await request.json()
+    messages = body.get("messages", [])
+    model_id = body.get("model_id")
+    chat_id = body.get("chat_id")
+    system_prompt = body.get("system_prompt", "")
+
+    # 查找模型配置
+    model_obj = None
+    if model_id:
+        result = await db.exec(select(Model).where(Model.id == int(model_id)))
+        model_obj = result.first()
+
+    # 构建 AI 消息（前置 system prompt）
+    ai_messages = []
+    if system_prompt:
+        ai_messages.append({"role": "system", "content": system_prompt})
+    for m in messages:
+        if m.get("role") == "system":
+            continue  # 已前置
+        ai_messages.append({"role": m["role"], "content": m.get("content", "")})
+
+    if not chat_id:
+        raise HTTPException(status_code=400, detail="缺少 chat_id，请先创建对话")
+
+    async def event_generator():
+        full_content = ""
+        try:
+            async for chunk in stream_ai(ai_messages, model_obj):
+                if chunk["type"] == "delta":
+                    content = chunk["content"]
+                    full_content += content
+                    data = {
+                        "choices": [{"delta": {"content": content}, "index": 0}]
+                    }
+                    yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+                elif chunk["type"] == "reason":
+                    data = {
+                        "choices": [{
+                            "delta": {"reasoning_content": chunk["content"]},
+                            "index": 0,
+                        }]
+                    }
+                    yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+                elif chunk["type"] == "error":
+                    data = {"error": {"message": chunk["message"]}}
+                    yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+                    return
+
+            yield "data: [DONE]\n\n"
+
+            # ── 保存对话到数据库 ──
+            if not full_content:
+                return
+
+            user_msgs = [m for m in messages if m.get("role") == "user"]
+            first_content = user_msgs[0].get("content", "") if user_msgs else ""
+            store_name = first_content[:50] if first_content else "新对话"
+            store_messages = messages + [{"role": "assistant", "content": full_content}]
+
+            result = await db.exec(select(Chat).where(Chat.id == int(chat_id)))
+            chat_obj = result.first()
+            if chat_obj:
+                chat_obj.messages = store_messages
+                chat_obj.last_message_at = datetime.now()
+                if not chat_obj.name:
+                    chat_obj.name = store_name
+                chat_obj.model = model_obj.name if model_obj else chat_obj.model
+                db.add(chat_obj)
+                await db.commit()
+
+        except Exception as e:
+            logger.error(f"[SSE] 代理错误: {e}")
+            data = {"error": {"message": str(e)}}
+            yield f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
+
+
 # ─── REST CRUD (复用 initrouter 风格) ───────────────────────
 
 @router.get("/", tags=["chat"])
 async def list_chats(
     db: ASYNC_DB,
-    current_user_id: CurrentUserId,
+    current_user: CurrentUser,
     page: int = 1,
     limit: int = 100,
-    model: str = "",
     sort: str = "-created_at",
+    name__contains: str = "",
+    model__contains: str = "",
 ):
     from sqlmodel import func, desc
-    filters = [Chat.creator_id == current_user_id] if current_user_id else []
-    if model:
-        filters.append(Chat.model == model)
-    order = desc(Chat.created_at) if sort.startswith("-") else Chat.created_at
+    filters = []
+    # 非超级用户只看自己的对话
+    if not current_user.is_superuser:
+        filters.append(Chat.creator_id == current_user.id)
+    if name__contains:
+        filters.append(Chat.name.like(f"%{name__contains}%"))
+    if model__contains:
+        filters.append(Chat.model.like(f"%{model__contains}%"))
+    if sort.startswith("-"):
+        order = desc(getattr(Chat, sort[1:], Chat.created_at))
+    else:
+        order = getattr(Chat, sort, Chat.created_at)
     total = (await db.exec(select(func.count()).where(*filters).select_from(Chat))).one()
     items = (
         await db.exec(
             select(Chat).where(*filters).order_by(order).offset((page - 1) * limit).limit(limit)
         )
     ).all()
-    # 只返回必要字段
-    result = []
-    for c in items:
-        result.append({
-            "id": c.id,
-            "name": c.name,
-            "model": c.model,
-            "role_id": c.role_id,
-            "created_at": str(c.created_at) if c.created_at else None,
-        })
-    return {"data": result, "total": total}
+    return {"data": items, "total": total}
 
 
 @router.post("/", tags=["chat"])

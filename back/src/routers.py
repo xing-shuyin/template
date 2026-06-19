@@ -245,7 +245,9 @@ def initrouter(model: SQLModel, router: APIRouter | FastAPI, cache_list=None) ->
             del item_in["create_time"]
         if "update_time" in item_in:
             del item_in["update_time"]
-        item_db = db.exec(select(model).where(model.id == item_id)).first()
+        item_db = (
+            await db.exec(select(model).where(model.id == item_id))
+        ).first()
         if not item_db:
             raise HTTPException(status_code=404, detail=f"{model_name} not found")
 
