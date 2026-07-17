@@ -1,13 +1,10 @@
-import asyncio
 from sqlmodel import Session, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine
 from settings import settings
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from fastapi.routing import APIWebSocketRoute
-from fastapi import HTTPException
 import json
-import redis
 from loguru import logger
 from models import *
 
@@ -23,44 +20,12 @@ async_engine = create_async_engine(
 )
 
 
-async def check_rate_limit(key: str, max_attempts: int = 5, window: int = 60) -> None:
-    """基于 Redis 的滑动窗口频率限制
-    key: 标识（如 IP 或用户名）
-    max_attempts: 窗口内最大尝试次数
-    window: 时间窗口（秒）
-    超过限制则抛出 HTTPException 429
-    """
-    now = asyncio.get_event_loop().time()
-    pipe = redisclient.pipeline()
-    window_key = f"ratelimit:{key}"
-    await pipe.zadd(window_key, {str(now): now})
-    await pipe.zremrangebyscore(window_key, 0, now - window)
-    await pipe.zcard(window_key)
-    await pipe.expire(window_key, window)
-    results = await pipe.execute()
-    count = results[2]
-    if count > max_attempts:
-        raise HTTPException(
-            status_code=429,
-            detail="请求过于频繁，请稍后再试",
-        )
-
-
 datas = json.load(open("media/initial.json", "r", encoding="utf-8"))
-
-redisclient = redis.asyncio.Redis(
-    username=settings.REDIS_USERNAME,
-    host=settings.REDIS_HOST,
-    port=settings.REDIS_PORT,
-    password=settings.REDIS_PASSWORD,
-    db=settings.REDIS_DB,
-)
 
 
 def init_db(app: FastAPI):
     from sqlmodel import SQLModel, select, update
 
-    # await redisclient.flushdb()
     # Need imported all models in project for create tables
 
     from src.user import create_user

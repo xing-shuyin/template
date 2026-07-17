@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from settings import settings
 from fastapi import APIRouter
 from db import init_db
+from cache import init_cache, close_cache
 from contextlib import asynccontextmanager
 from src.routers import initrouters
 from loguru import logger
@@ -38,7 +39,9 @@ logger.configure(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await init_cache(backend=settings.CACHE_BACKEND, settings=settings)
     yield
+    await close_cache()
 
 
 app = FastAPI(

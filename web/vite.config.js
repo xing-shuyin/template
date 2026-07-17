@@ -15,12 +15,12 @@ export default defineConfig({
     open: 'http://127.0.0.1:3000',
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8091',
+        target: 'http://127.0.0.1:8090',
         ws: true,
         changeOrigin: true,
       },
       '/public': {
-        target: 'http://127.0.0.1:8091',
+        target: 'http://127.0.0.1:8090',
         changeOrigin: true,
       }
     },

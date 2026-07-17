@@ -12,5 +12,11 @@
         "**/__pycache__/**": true,
         "**/.venv/**": false,
         "**/node_modules/**": true
+    },
+    "chat.tools.terminal.autoApprove": {
+        "/^Set-Location 'e:\\\\template\\\\back'; \\.\\\\\\.venv\\\\Scripts\\\\python\\.exe -c \"from pathlib import Path; p=Path\\('\\.env'\\); data=p\\.read_bytes\\(\\); print\\(data\\); print\\('len', len\\(data\\)\\); print\\('repr', repr\\(data\\[:200\\]\\)\\); print\\('decode utf-8', data\\.decode\\('utf-8'\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }

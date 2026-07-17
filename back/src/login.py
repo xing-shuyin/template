@@ -19,7 +19,7 @@ from utils import send_reset_email, send_activate_email
 from .deps import DB, CurrentUser, RefreshUser, ActivateUser, ResetUser, ASYNC_DB
 from security import hash_password, create_token, TokenType
 from .user import get_user
-from db import redisclient, check_rate_limit
+from cache import get_cache, check_rate_limit
 
 router = APIRouter()
 templates = Jinja2Templates(directory=os.path.join(settings.MEDIA_PATH, "templates"))
@@ -95,7 +95,7 @@ async def reset_password(db: ASYNC_DB, request: Request, user: UserResetEmail):
     # 限流：按 IP 限制密码重置频率
     client_ip = request.client.host if request.client else "unknown"
     await check_rate_limit(f"reset:ip:{client_ip}", max_attempts=3, window=60)
-    
+
     user_obj = await get_user(db, email=user.email)
     if not user_obj:
         raise HTTPException(status_code=400, detail="邮箱不存在")
@@ -187,7 +187,9 @@ async def access_token(
     # 频率限制：按 IP 和用户名分别限制
     client_ip = request.client.host if request.client else "unknown"
     await check_rate_limit(f"login:ip:{client_ip}", max_attempts=10, window=60)
-    await check_rate_limit(f"login:user:{form_data.username}", max_attempts=5, window=60)
+    await check_rate_limit(
+        f"login:user:{form_data.username}", max_attempts=5, window=60
+    )
 
     if not session_id_cookie and not session_id_form:
         raise HTTPException(
@@ -196,8 +198,7 @@ async def access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     session_id = session_id_cookie if session_id_cookie else session_id_form
-    captcha_cache = await redisclient.get(session_id)
-    captcha_cache = captcha_cache.decode("utf-8") if captcha_cache else None
+    captcha_cache = await get_cache().get(session_id)
     if not captcha_cache:
         raise HTTPException(
             status_code=401,
@@ -206,7 +207,7 @@ async def access_token(
         )
 
     if captcha.lower() == captcha_cache.lower():
-        await redisclient.delete(session_id)
+        await get_cache().delete(session_id)
     else:
         raise HTTPException(
             status_code=401,

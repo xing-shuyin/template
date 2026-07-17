@@ -3,7 +3,7 @@ import axios from 'axios';
 import bus from '@/utils/bus'
 // 创建一个 Axios 实例
 const service = axios.create({
-  baseURL: import.meta.env.VITE_BASE_API || '/', // 基础路径，支持从环境变量中获取
+  baseURL: import.meta.env.VITE_BASE_API || '/api', // 基础路径，支持从环境变量中获取
   timeout: 5000, // 请求超时时间
 });
 

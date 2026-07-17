@@ -20,7 +20,7 @@ import os
 from io import BytesIO
 from pathlib import Path
 from src.deps import DB, Client, ASYNC_DB
-from db import redisclient
+from cache import get_cache
 from models import File
 from src.deps import CurrentUser
 from loguru import logger
@@ -118,21 +118,19 @@ def send_email(to_email: str, content: str, subject: str = "") -> bool:
     if settings.SMTP_SSL:
         with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(
-                settings.EMAILS_FROM_EMAIL, to_email, msg.as_string()
-            )
+            server.sendmail(settings.EMAILS_FROM_EMAIL, to_email, msg.as_string())
             return True
     else:
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
             server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(
-                settings.EMAILS_FROM_EMAIL, to_email, msg.as_string()
-            )
+            server.sendmail(settings.EMAILS_FROM_EMAIL, to_email, msg.as_string())
             return True
 
 
-def send_activate_email(to_email: str, user_name: str, activate_link: str, expiration_time: str) -> bool:
+def send_activate_email(
+    to_email: str, user_name: str, activate_link: str, expiration_time: str
+) -> bool:
     template = env.get_template("activate_email.html")
     content = template.render(
         user_name=user_name,
@@ -142,7 +140,9 @@ def send_activate_email(to_email: str, user_name: str, activate_link: str, expir
     return send_email(to_email, content, "账号激活")
 
 
-def send_code_email(to_email: str, user_name: str, verification_code: str, expiration_time: str) -> None:
+def send_code_email(
+    to_email: str, user_name: str, verification_code: str, expiration_time: str
+) -> None:
     template = env.get_template("code_email.html")
     content = template.render(
         user_name=user_name,
@@ -152,7 +152,9 @@ def send_code_email(to_email: str, user_name: str, verification_code: str, expir
     send_email(to_email, content, "验证码")
 
 
-def send_reset_email(to_email: str, user_name: str, reset_link: str, expiration_time: str) -> bool:
+def send_reset_email(
+    to_email: str, user_name: str, reset_link: str, expiration_time: str
+) -> bool:
     template = env.get_template("reset_email.html")
     content = template.render(
         user_name=user_name, reset_link=reset_link, expiration_time=expiration_time
@@ -205,7 +207,7 @@ async def get_captcha(
     buffer = io.BytesIO()
     image.save(buffer, format="PNG")
     buffer.seek(0)
-    await redisclient.set(session_id, text, ex=300)
+    await get_cache().set(session_id, text, ex=300)
 
     image_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
 
@@ -288,7 +290,9 @@ async def video(file: str, range: str = Header(None)) -> StreamingResponse:
 
 async def iconify_collections() -> JSONResponse:
     os.makedirs(os.path.join(settings.MEDIA_PATH, "iconify"), exist_ok=True)
-    cache_file = os.path.join(settings.MEDIA_PATH, "iconify", "iconify_collections.json")
+    cache_file = os.path.join(
+        settings.MEDIA_PATH, "iconify", "iconify_collections.json"
+    )
     if os.path.exists(cache_file):
         with open(cache_file, "r", encoding="utf-8") as f:
             if (
@@ -315,7 +319,9 @@ async def iconify_collections() -> JSONResponse:
 
 
 async def iconify_icons(prefix: str) -> JSONResponse:
-    cache_file = os.path.join(settings.MEDIA_PATH, "iconify", f"iconify_icons_{prefix}.json")
+    cache_file = os.path.join(
+        settings.MEDIA_PATH, "iconify", f"iconify_icons_{prefix}.json"
+    )
     if os.path.exists(cache_file):
         with open(cache_file, "r", encoding="utf-8") as f:
             if (
@@ -329,7 +335,8 @@ async def iconify_icons(prefix: str) -> JSONResponse:
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             r = await client.get(
-                "https://api.iconify.design/collection", params={"prefix": prefix, "pretty": 1}
+                "https://api.iconify.design/collection",
+                params={"prefix": prefix, "pretty": 1},
             )
             data = r.json()
         with open(cache_file, "w", encoding="utf-8") as f:

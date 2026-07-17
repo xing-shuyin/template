@@ -8,13 +8,6 @@
       "description": "uv run"
     },
     {
-      "id": "1779103430083",
-      "name": "claude bypass",
-      "command": "claude --permission-mode bypassPermissions",
-      "workingDirectory": "${pwd}",
-      "description": ""
-    },
-    {
       "id": "2",
       "name": "dev",
       "command": "pnpm run dev",

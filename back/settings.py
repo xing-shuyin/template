@@ -29,7 +29,10 @@ class Settings(BaseSettings):
     PROJECT_NAME: str
     API: str
     ALLOW_HOSTS: list[str] = []
-    ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_origins)] = ["http://localhost:3000", "http://localhost:5173"]
+    ORIGINS: Annotated[list[AnyUrl] | str, BeforeValidator(parse_origins)] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
 
     @computed_field
     @property
@@ -76,12 +79,15 @@ class Settings(BaseSettings):
             path=self.PG_DATABASE,
         )
 
+    CACHE_BACKEND: str = "memory"
+
     REDIS_HOST: str = "localhost"
     REDIS_USERNAME: str = "default"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = "123456"
-    SERVER_HOST: str = "192.168.1.102:8090"
     REDIS_DB: int = 1
+
+    SERVER_HOST: str = "192.168.1.102:8090"
 
     SMTP_SSL: bool = False
     SMTP_PORT: int = 587
@@ -97,6 +103,7 @@ class Settings(BaseSettings):
         if self.IS_PRODUCTION:
             # 生产环境必须通过环境变量设置 SECRET_KEY，禁止使用默认随机值
             import os
+
             if not os.environ.get("SECRET_KEY"):
                 raise ValueError(
                     "生产环境必须通过环境变量 SECRET_KEY 设置密钥，不能使用默认值"
@@ -121,7 +128,6 @@ class Settings(BaseSettings):
 
     # MEDIA_PATH: str = "./media/"
     MEDIA_PATH: str = os.path.join(os.path.dirname(__file__), "media")
-
 
 
 settings = Settings()
