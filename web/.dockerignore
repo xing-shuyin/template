@@ -1,0 +1,29 @@
+# Node
+node_modules/
+dist/
+.pnpm-store/
+
+# 环境
+.env
+.env.*
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker
+Dockerfile
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log

@@ -1,0 +1,21 @@
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker 自身
+docker-compose.yml
+.dockerignore
+.env.docker
+*.md
+
+# 子项目各自有 .dockerignore
