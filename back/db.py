@@ -30,6 +30,9 @@ def init_db(app: FastAPI):
 
     from src.user import create_user
 
+    if getattr(app.state, "db_initialized", False):
+        return
+
     with Session(engine) as db:
         SQLModel.metadata.create_all(engine)
         route_id = []
@@ -49,47 +52,56 @@ def init_db(app: FastAPI):
                         return False
             return True
 
-        # 初始化接口
-        for route in app.routes:
-            if isinstance(route, APIRoute):
-                for method in route.methods:
-                    if method == "OPTIONS":
-                        continue
+        def walk_routes(routes):
+            for route in routes:
+                if isinstance(route, APIRoute):
+                    for method in route.methods:
+                        if method == "OPTIONS":
+                            continue
+                        interface = db.exec(
+                            select(Interface)
+                            .where(Interface.path == route.path)
+                            .where(Interface.method == method)
+                        ).first()
+
+                        if not interface:
+                            interface = Interface(
+                                name=route.name, path=route.path, method=method
+                            )
+                            db.add(interface)
+                            db.commit()
+                            db.refresh(interface)
+                            logger.info(f"初始化接口: {route.path} {method}")
+                        if include(interface.path):
+                            user_route_id.append(interface.id)
+                        route_id.append(interface.id)
+                elif isinstance(route, APIWebSocketRoute):
                     interface = db.exec(
                         select(Interface)
                         .where(Interface.path == route.path)
-                        .where(Interface.method == method)
+                        .where(Interface.method == "websocket")
                     ).first()
 
                     if not interface:
                         interface = Interface(
-                            name=route.name, path=route.path, method=method
+                            name=route.name, path=route.path, method="websocket"
                         )
                         db.add(interface)
                         db.commit()
                         db.refresh(interface)
-                        logger.info(f"初始化接口: {route.path} {method}")
+                        logger.info(f"初始化接口: {route.path} websocket")
                     if include(interface.path):
                         user_route_id.append(interface.id)
                     route_id.append(interface.id)
-            elif isinstance(route, APIWebSocketRoute):
-                interface = db.exec(
-                    select(Interface)
-                    .where(Interface.path == route.path)
-                    .where(Interface.method == "websocket")
-                ).first()
+                elif hasattr(route, "routes"):
+                    walk_routes(route.routes)
+                elif hasattr(route, "included_router"):
+                    walk_routes(route.included_router.routes)
+                elif hasattr(route, "original_router"):
+                    walk_routes(route.original_router.routes)
 
-                if not interface:
-                    interface = Interface(
-                        name=route.name, path=route.path, method="websocket"
-                    )
-                    db.add(interface)
-                    db.commit()
-                    db.refresh(interface)
-                    logger.info(f"初始化接口: {route.path} websocket")
-                if include(interface.path):
-                    user_route_id.append(interface.id)
-                route_id.append(interface.id)
+        # 初始化接口
+        walk_routes(app.routes)
 
         # 初始化角色
         role = db.exec(select(Role).where(Role.name == "Admin")).first()
@@ -163,3 +175,5 @@ def init_db(app: FastAPI):
             db.add(Model(**m_cfg))
             logger.info(f"初始化模型: {m_cfg['label']}")
         db.commit()
+
+        app.state.db_initialized = True
