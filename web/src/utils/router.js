@@ -39,6 +39,13 @@ const router = createRouter({
             meta: { title: "用户信息" },
             children: []
         },
+        {
+            path: '/',
+            name: 'index',
+            component: ()=> import('../views/index.vue'),
+            meta:{title: "首页"},
+            children:[]
+        }
     ],
 
 })

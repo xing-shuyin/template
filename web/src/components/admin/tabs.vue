@@ -105,7 +105,7 @@ onBeforeMount(() => {
     overflow: hidden;
     margin-right: 10px;
 
-    :deep(.el-tabs) {
+    ::deep(.el-tabs) {
         .el-tabs__header {
             margin-bottom: 0;
         }
@@ -137,7 +137,7 @@ onBeforeMount(() => {
         top: 50%;
         transform: translateY(-50%);
 
-        :deep(.el-dropdown) {
+        ::deep(.el-dropdown) {
             .el-button:hover {
                 color: var(--admin-tab-tool-hover-color);
             }

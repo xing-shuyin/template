@@ -431,31 +431,31 @@ onMounted(async () => {
 .msg-row.user .msg-content .edit-btn {
   flex-shrink: 0;
 }
-.msg-text :deep(pre) {
+.msg-text ::deep(pre) {
   background: #1e1e1e; color: #d4d4d4;
   padding: 12px 14px; border-radius: var(--chat-radius);
   overflow-x: auto; margin: 6px 0; position: relative;
 }
-.msg-text :deep(code) { font-family: 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; }
-.msg-text :deep(p) { margin: 0; padding: 0; line-height: 1.85; }
-.msg-text :deep(ul), .msg-text :deep(ol) {
+.msg-text ::deep(code) { font-family: 'Fira Code', 'Cascadia Code', monospace; font-size: 13px; }
+.msg-text ::deep(p) { margin: 0; padding: 0; line-height: 1.85; }
+.msg-text ::deep(ul), .msg-text ::deep(ol) {
   padding-left: 1.5em;
   margin: 0;
 }
-.msg-text :deep(li) {
+.msg-text ::deep(li) {
   margin: 0;
   padding-left: 0;
 }
-.msg-text :deep(li::marker) {
+.msg-text ::deep(li::marker) {
   color: var(--chat-muted-fg);
 }
-.msg-text :deep(table) { border-collapse: collapse; width: 100%; margin: 4px 0; }
-.msg-text :deep(th), .msg-text :deep(td) { border: 1px solid var(--chat-border); padding: 4px 8px; }
-.msg-text :deep(th) { background: var(--chat-muted); font-weight: 600; }
-.msg-text :deep(strong) { color: #fff; }
-.msg-text :deep(h1), .msg-text :deep(h2), .msg-text :deep(h3), .msg-text :deep(h4) { margin: 6px 0 1px; color: #fff; }
-.msg-text :deep(blockquote) { border-left: 3px solid var(--chat-border); margin: 4px 0; padding: 2px 12px; color: var(--chat-muted-fg); }
-.msg-text :deep(hr) { margin: 6px 0; }
+.msg-text ::deep(table) { border-collapse: collapse; width: 100%; margin: 4px 0; }
+.msg-text ::deep(th), .msg-text ::deep(td) { border: 1px solid var(--chat-border); padding: 4px 8px; }
+.msg-text ::deep(th) { background: var(--chat-muted); font-weight: 600; }
+.msg-text ::deep(strong) { color: #fff; }
+.msg-text ::deep(h1), .msg-text ::deep(h2), .msg-text ::deep(h3), .msg-text ::deep(h4) { margin: 6px 0 1px; color: #fff; }
+.msg-text ::deep(blockquote) { border-left: 3px solid var(--chat-border); margin: 4px 0; padding: 2px 12px; color: var(--chat-muted-fg); }
+.msg-text ::deep(hr) { margin: 6px 0; }
 
 /* Message actions */
 .msg-actions {

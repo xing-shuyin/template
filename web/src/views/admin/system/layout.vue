@@ -220,7 +220,7 @@ const breadcrumbs = computed(() => {
                 flex: 1;
                 min-width: 200px;
 
-                :deep(.el-input__wrapper) {
+                ::deep(.el-input__wrapper) {
                     border-radius: 6px;
                     background: var(--input-bg);
                     box-shadow: 0 0 0 1px var(--border-color);
@@ -300,7 +300,7 @@ const breadcrumbs = computed(() => {
             --el-table-row-hover-bg-color: var(--admin-main-table-row-hover-bg);
             --el-table-current-row-bg-color: var(--admin-main-table-current-row-bg);
 
-            :deep(.el-table__header) {
+            ::deep(.el-table__header) {
                 th {
                     background-color: var(--content-bg);
                     color: var(--text-color);
@@ -309,7 +309,7 @@ const breadcrumbs = computed(() => {
                 }
             }
 
-            :deep(.el-table__body) {
+            ::deep(.el-table__body) {
                 tr {
                     td {
                         transition: background-color 0.2s ease;
@@ -322,7 +322,7 @@ const breadcrumbs = computed(() => {
             }
 
             /* 操作列按钮样式 */
-            :deep(.el-button--text) {
+            ::deep(.el-button--text) {
                 padding: 6px 8px;
                 font-size: 13px;
                 transition: all 0.2s ease;
@@ -354,9 +354,9 @@ const breadcrumbs = computed(() => {
 
         .el-pagination {
 
-            :deep(.btn-prev),
-            :deep(.btn-next),
-            :deep(.number) {
+            ::deep(.btn-prev),
+            ::deep(.btn-next),
+            ::deep(.number) {
                 width: 36px;
                 height: 36px;
                 border-radius: 8px;
@@ -369,7 +369,7 @@ const breadcrumbs = computed(() => {
                 }
             }
 
-            :deep(.is-active) {
+            ::deep(.is-active) {
                 background-color: var(--primary-color);
                 color: white;
             }
@@ -378,7 +378,7 @@ const breadcrumbs = computed(() => {
 
     /* 对话框样式 */
     .admin_detail_dialog {
-        :deep(.el-dialog) {
+        ::deep(.el-dialog) {
             border-radius: 12px;
             overflow: hidden;
             background-color: var(--content-bg);
@@ -402,7 +402,7 @@ const breadcrumbs = computed(() => {
 
                         .el-input,
                         .el-cascader {
-                            :deep(.el-input__wrapper) {
+                            ::deep(.el-input__wrapper) {
                                 border-radius: 8px;
                                 background-color: var(--content-bg);
                                 box-shadow: 0 0 0 1px var(--border-color);
@@ -447,7 +447,7 @@ const breadcrumbs = computed(() => {
         .main-top {
             .search {
                 .el-input {
-                    :deep(.el-input__inner) {
+                    ::deep(.el-input__inner) {
                         color: var(--text-color);
                     }
                 }
@@ -460,7 +460,7 @@ const breadcrumbs = computed(() => {
         }
 
         .admin_detail_dialog {
-            :deep(.el-dialog) {
+            ::deep(.el-dialog) {
                 .el-form {
                     .el-form-item__label {
                         color: var(--text-color);
@@ -533,7 +533,7 @@ const breadcrumbs = computed(() => {
         flex: 1;
         overflow: hidden;
 
-        :deep(.el-scrollbar__view) {
+        ::deep(.el-scrollbar__view) {
             height: 100%;
         }
 
@@ -541,8 +541,8 @@ const breadcrumbs = computed(() => {
             height: 100%;
             border-right: none;
 
-            :deep(.el-menu-item),
-            :deep(.el-sub-menu__title) {
+            ::deep(.el-menu-item),
+            ::deep(.el-sub-menu__title) {
                 height: 48px;
                 line-height: 48px;
                 transition: all var(--transition-time);
@@ -608,7 +608,7 @@ const breadcrumbs = computed(() => {
             .el-breadcrumb {
                 font-size: 14px;
 
-                :deep(.el-breadcrumb__inner) {
+                ::deep(.el-breadcrumb__inner) {
                     color: var(--text-color-light);
                     transition: color var(--transition-time);
 
